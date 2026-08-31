@@ -8,7 +8,7 @@ import { yearBucketsFromRange } from './useCollection.js'
 // ── Which chronology this site's Timeline section shows ────────────────────
 //
 // An exhibition package carries BOTH chronologies, because the live instance
-// serves both: `/events` answers the worldwide 26-country merge on every DXA
+// serves both: `/events` answers the worldwide country merge on every DXA
 // site, and `/thg/timeline` answers the exhibition's own narrative one. What
 // decides which the *Timeline pages* show is `hasCountryBasedTimeline`:
 // legacy's TimelinePage sets `countriesAvailable` from it and TimelineResults
@@ -16,12 +16,14 @@ import { yearBucketsFromRange } from './useCollection.js'
 // false branch).
 //
 // This exhibition reports `has_timeline: true` / `has_country_timeline: false`,
-// so its Timeline pages show its OWN chronology: one `thg_local` row with 45
-// events. The worldwide merge is still in the package — 37 further timelines
-// and 1,390 events, which every DXA site gets whatever its flags say — and is
-// simply not what these pages read. The flags gate navigation and selection,
-// never the data. Water in Islam proves the other direction: both flags false,
-// no `thg_local` row, and the same 1,390 events shipped regardless.
+// so its Timeline pages show its OWN chronology — the `thg_local` row — rather
+// than the worldwide merge.
+//
+// The worldwide merge is still in the package regardless, because every DXA
+// site is shipped it whatever its flags say. The flags therefore gate
+// navigation and selection, never the presence of data: an exhibition with
+// both flags false still has `timelines.json` full of events it simply never
+// shows. Reading the flags as "has timeline data" is the trap.
 //
 // The `thg_local` row has no `country_id`, which is exactly why it must be
 // separated by `source` rather than left to the country filter: on "All
@@ -39,14 +41,14 @@ export const usesLocalTimeline = computed(
  * Whether this site offers a Timeline at all — the one flag every piece of
  * timeline chrome is gated on.
  *
- * True here, so every piece of that chrome is shown: the TIMELINE nav entry
- * between PARTNERS and RELATED CONTENT, the "Timeline for this item" popout on
- * the item sheet and "Timeline for this Search" on the collection results.
+ * It gates more than the nav entry: legacy also withholds the "Timeline for
+ * this item" popout on the item sheet and "Timeline for this Search" on the
+ * collection results, which is why this is exported and read in three places
+ * rather than being a local check in the navigation.
  *
- * The gate is kept because it is legacy's, not because this exhibition needs
- * it: Water in Islam has both flags false and legacy withholds all of that
- * chrome there while leaving the ROUTES reachable — typing /timeline on its
- * live instance still renders the page and its `txtTimeline` introduction.
+ * The ROUTES stay reachable either way, because legacy's do — typing /timeline
+ * on an instance with no timeline still renders the page and its `txtTimeline`
+ * introduction. Only the links into it are withheld.
  */
 export const hasTimeline = computed(
   () => Boolean(exhibition.has_timeline || exhibition.has_country_timeline)
@@ -63,26 +65,25 @@ const eventPool = computed(() => {
 })
 
 // The global country timeline, served by legacy `/v2/events`. It is
-// country-scoped and project-independent — which is why the live carpets
-// instance answers `/events/countries` with the worldwide list even though its
-// own `hasCountryBasedTimeline` flag is false.
+// country-scoped and project-independent — which is why a live instance
+// answers `/events/countries` with the worldwide list even though its own
+// `hasCountryBasedTimeline` flag is false.
 //
 // It is also a MERGE of two chronologies rather than one table. Legacy's
 // `App\MWNF\DAO\v2\Events` unions `mwnf3.hcr` (the Discover Islamic Art country
-// chronologies, 18 timelines) with `mwnf3_sharing_history.sh_hcr` restricted to
-// exhibition 2, "Political Context" (19 timelines), and sorts the result by
-// year. The package mirrors that exactly: `timelines.json` carries 37 rows over
-// 26 countries, each tagged `source: 'mwnf3' | 'sharing_history'`, and
-// `timeline_events.json` carries all 1,390 events keyed by `country_id`.
+// chronologies) with `mwnf3_sharing_history.sh_hcr` restricted to exhibition 2,
+// "Political Context", and sorts the result by year. The package mirrors that:
+// each row of `timelines.json` is tagged `source: 'mwnf3' | 'sharing_history'`,
+// and `timeline_events.json` keys every event by `country_id`.
 //
-// Eleven countries are served by BOTH sources, so anything user-facing must key
-// on the country and never on the timeline row: the picker below is built per
+// A country can be served by BOTH sources, so anything user-facing must key on
+// the country and never on the timeline row: the picker below is built per
 // country, and `findEvents` filters on `country_id`, which is what merges the
 // two chronologies into one year-ordered list the way legacy did.
 //
 // Names and legacy codes both come from countries.json. The exporter scopes
 // that file to "member item countries ∪ their holders' countries ∪ the global
-// timeline's countries", so it covers all 26 timeline countries — the
+// timeline's countries", so it covers every timeline country — the
 // `Intl.DisplayNames` fallback below is therefore dead code for them, and is
 // kept only so a regressed package degrades to a rendered ISO code rather than
 // a raw id. The `code` countries.json ships is the country's
@@ -105,7 +106,7 @@ const LEGACY_TO_ISO = { uk: 'GB', pa: 'PS' }
 
 // A lookup, not a parse. The fallback exists only for the regressed-package
 // case described above, and it must agree with GLOBAL_TIMELINE_LIKE_PATTERNS in
-// `scripts/exporters/carpets/src/exporters/timeline-exporter.ts`: the country
+// `scripts/exporters/the-use-of-colours-in-art/src/exporters/timeline-exporter.ts`: the country
 // sits after the literal `country` segment in BOTH keyspaces
 // (`mwnf3:hcr:country:<cc>` and
 // `mwnf3_sharing_history:sh_hcr:country:<cc>:exhibition:2`), and it is the last
@@ -135,9 +136,9 @@ function nameFor(timeline) {
 /**
  * Countries that actually have a chronology, alphabetized, "All" first.
  *
- * One entry per COUNTRY, not per timeline row: the eleven countries served by
- * both `mwnf3` and `sharing_history` would otherwise appear twice in every
- * country picker on the site.
+ * One entry per COUNTRY, not per timeline row: a country served by BOTH
+ * `mwnf3` and `sharing_history` has two rows, and would otherwise appear twice
+ * in every country picker on the site.
  */
 export const timelineCountries = computed(() => {
   // No picker at all when the section is the exhibition's own chronology —

@@ -58,9 +58,9 @@ const currentYear = new Date().getFullYear()
 
 const searchInput = ref('')
 // `all-objects` is legacy's sentinel for an empty submission, and the value
-// SearchResults matches on. (The monorepo viewer this site is ported from
-// sends `all-items` here, so an empty search there reports "0 result(s) out of
-// 494" instead of listing everything — see the PR description.)
+// SearchResults matches on. The two must agree: the monorepo viewer sent
+// `all-items` from here while matching `all-objects` there, so an empty search
+// reported no results out of the full count instead of listing everything.
 function submitSearch() {
   router.push({ name: 'search-results', query: { q: searchInput.value || 'all-objects' } })
   searchInput.value = ''
@@ -85,9 +85,8 @@ const menuOpen = ref(false)
 
 // Legacy renders category 0 — "Header" — beside the MWNF mark, under the
 // `header_logo_section_1` heading, and leaves categories 1–4 to the footer
-// strip. This exhibition has one logo and it is category 1, the UNAOC mark
-// under "Under the patronage of", so the header block stays empty here too;
-// the code is kept because the split is the data's, not this exhibition's.
+// strip. Which categories an exhibition populates is the data's business, not
+// this shell's, so both blocks are rendered and either may come out empty.
 const headerLogos = computed(() =>
   (exhibition.logos ?? [])
     .filter((logo) => Number(logo.category_id) === 0 && logo.visible !== false)

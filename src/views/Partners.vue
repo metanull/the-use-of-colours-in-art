@@ -20,15 +20,12 @@ import BackLink from '../components/BackLink.vue'
 // union exactly — the exporter README makes the same point from the other
 // side.
 //
-// Here that union is 85 rows — 71 museums and 14 institutions.
-//
 // ── Hidden partners are excluded, items are not ────────────────────────────
 // `exhibition.json.hidden_partner_ids` is legacy's E6 rule: the museum is
-// hidden from every list and profile page while its items keep rendering. This
-// exhibition hides none, so the rule is inert here; it is kept because it is
-// the platform's rather than this deployment's, and it is load bearing on the
-// sibling fork — Water in Islam hides eleven, and without the rule its list
-// would overcount by exactly that many.
+// hidden from every list and profile page while its items keep rendering — it
+// hides the museum, not the object, so this must not be pushed down into the
+// item queries. Whether any partner is hidden is a property of the export
+// rather than of this site.
 //
 // ── Partners that hold nothing are listed, because legacy lists them ────────
 // Legacy's partner query is a three-branch UNION whose third branch — its own
@@ -36,8 +33,7 @@ import BackLink from '../components/BackLink.vue'
 // own project*, whether or not it holds a member item. Such a partner gets a
 // full entry here — name, city, logo, "Read more" — and only the "View
 // objects" link is withheld, which is exactly what legacy does with
-// `v-if="partner.hasObjects"`. No partner of this exhibition is in that state
-// either; the branch is kept for the same reason as the one above.
+// `v-if="partner.hasObjects"`.
 //
 // The one place this differs from legacy is the object-count line, which is
 // this website's addition (legacy prints no count on the partners page). Left

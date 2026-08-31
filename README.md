@@ -40,20 +40,18 @@ Docker preview reads the token from `.env`.
 
 ### One build, one language — and this one is English
 
-`exhibition.languages_enabled` is what this deployment publishes, and the site
-is built for it. An exhibition ships **one build per enabled language** rather
-than switching between them at runtime, which is why the header carries no
-language switcher. The item sheet and the partner profile still offer every
-language the *record* itself carries, exactly as the legacy client did.
+An exhibition language is a **separate site**, not a switch. Legacy deployed
+`/{slug}/{lang}` as independent instances and this platform keeps that shape,
+which is why the header carries no language switcher. The item sheet and the
+partner profile still offer every language the *record* itself carries, exactly
+as the legacy client did.
 
-This exhibition is the one where the two language fields disagree:
-`languages: ["de","en"]`, `languages_enabled: ["en"]`. German curated text
-exists throughout — all 15 themes are translated — but was **never published**.
-Legacy's own German instance answers `exhibitionTitle: null`, serves 5 items
-against English's 171, and 0 timeline events against 1,390. So there is no
-German build, and adding one would publish a title-less site with five objects.
-If MWNF wants German live, the fix is to enable it in `exhibition_i18n`
-upstream; the build follows automatically.
+The site is built for `exhibition.languages_enabled` — what
+`exhibition_i18n.enabled` publishes — and not for `languages`, which also
+counts languages that were translated but never put live. This exhibition has
+German text throughout and no German instance that was ever published, so
+English is the only build. Enabling German upstream is all it would take for a
+German site to follow; nothing here would change.
 
 ### Two message sources, on purpose
 

@@ -1,17 +1,13 @@
 import { exhibitionTitle, siteLanguages } from './composables/useExhibitionData.js'
 import SiteShell from './SiteShell.vue'
 
-// The languages this build may offer are `exhibition.languages_enabled` — what
-// `exhibition_i18n.enabled` actually publishes — not the manifest's list of
-// every language some record happens to carry. Per the epic's decision Q2 an
-// exhibition ships one build per enabled language.
-//
-// This exhibition is the reason the two fields exist separately. It carries
-// `languages: ["de","en"]` and `languages_enabled: ["en"]`: German curated
-// text exists throughout — all 15 themes are translated — but was never
-// published. Legacy's own German instance answers `exhibitionTitle: null`,
-// serves 5 items against English's 171 and 0 timeline events. So English
-// alone is enabled, and the shell shows no language switcher.
+// An exhibition language is a separate SITE, not a switch: legacy deployed
+// `/{slug}/{lang}` as independent instances, and decision Q2 keeps that shape.
+// So this list comes from `exhibition.languages_enabled` — what
+// `exhibition_i18n.enabled` publishes — and never from `languages`, which also
+// counts languages that are translated but were never put live. The shell
+// carries no language switcher as a result; the item sheet and partner profile
+// still switch on the *record's* own languages.
 //
 // English first regardless of the package's order, because viewer-core boots
 // vue-i18n at `languages[0]`.

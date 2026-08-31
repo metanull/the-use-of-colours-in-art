@@ -38,8 +38,9 @@
   --rule-grey:   #e0e0e0;
 
   /* Source-project accents — legacy's #info-citation-link colouring, one tone
-     per family. This exhibition borrows from all eight, so every one is in
-     use here. */
+     per family. The table is the platform's, not this exhibition's: which
+     projects it borrows from is a property of the export and moves with every
+     reimport, so all of them are declared. */
   --dia-yellow:    #ffcc00;  /* Discover Islamic Art (ISL / EPM) */
   --dba-blue:      #001d66;  /* Discover Baroque Art (DBA / BAR) */
   --sh-red:        #900000;  /* Sharing History (AWE) */
