@@ -1,7 +1,9 @@
 <script setup>
 import { computed } from 'vue'
 import { exhibition } from '../composables/useExhibitionData.js'
-import { uiLang, t } from '../composables/useUiStrings.js'
+import { useI18n } from '@metanull/viewer-core'
+
+const { t, locale } = useI18n()
 
 // Legacy's LogosComponent: sponsor logos grouped by category, each group under
 // its `footer_logo_section_<categoryId>` heading from the i18n catalogue, each
@@ -35,18 +37,30 @@ const groups = computed(() => {
     }))
 })
 
+// Each heading is written out: a name assembled from the category id would
+// resolve at run time and be invisible to the check that every entry a page
+// asks for exists.
+//
+// The entries are named after the *slot*, not after what any one exhibition
+// puts in it. That is the lesson this exhibition taught: slot 1 reads "Under
+// the patronage of" on Water in Islam and "Doha Launch Hosts" here, and four
+// of the five headings differ between the only two exhibitions there are. The
+// shared entries carry a sensible default and each exhibition overloads the
+// ones that name its own sponsors, which is exactly what the merge rule is for.
 function headingFor(categoryId, logo) {
-  const key = `footer_logo_section_${categoryId}`
-  const label = t(key)
-  return label === key ? (logo.category ?? '') : label
+  if (Number(categoryId) === 1) return t('exhibition.sponsors.footerOne')
+  if (Number(categoryId) === 2) return t('exhibition.sponsors.footerTwo')
+  if (Number(categoryId) === 3) return t('exhibition.sponsors.footerThree')
+  if (Number(categoryId) === 4) return t('exhibition.sponsors.footerFour')
+  return logo.category ?? ''
 }
 
 function caption(logo) {
-  return logo.labels?.[uiLang.value] ?? logo.labels?.en ?? ''
+  return logo.labels?.[locale.value] ?? logo.labels?.en ?? ''
 }
 
 function altFor(logo) {
-  return logo.alt_texts?.[uiLang.value] ?? logo.alt_texts?.en ?? logo.alt_text ?? caption(logo)
+  return logo.alt_texts?.[locale.value] ?? logo.alt_texts?.en ?? logo.alt_text ?? caption(logo)
 }
 </script>
 
