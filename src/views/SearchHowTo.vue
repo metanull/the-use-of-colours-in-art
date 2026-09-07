@@ -1,6 +1,6 @@
 <script setup>
 import { I18nText } from '@metanull/viewer-core'
-import BackLink from '../components/BackLink.vue'
+import { BackLink } from '@metanull/viewer-layout/content'
 
 // Editorial page, shared by every exhibition. The whole essay is about MySQL
 // boolean full-text operators, which is why useCollection.js implements that
@@ -18,4 +18,3 @@ import BackLink from '../components/BackLink.vue'
 .editorial { background: #fff; width: 100%; min-height: 400px; padding-bottom: 40px; }
 .prose { padding: 10px 50px 20px; max-width: 900px; line-height: 1.55; }
 </style>
-
