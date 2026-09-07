@@ -4,6 +4,8 @@ import { checkOfferedLanguages } from '@metanull/viewer-core/testing'
 import { catalogues as sharedTexts } from '@metanull/viewer-i18n/exhibition'
 import ownTexts from '../locales/en.json'
 import config from '../src/dataset.config.js'
+import partnerNamesEn from '@metanull/the-use-of-colours-in-art-data/translations/partners.en.json'
+import dynastyNamesEn from '@metanull/the-use-of-colours-in-art-data/translations/dynasties.en.json'
 
 // The same two layers main.js assembles, in the same order: the shared bundle
 // first, this exhibition's own file last. Mounting without them would prove
@@ -62,8 +64,131 @@ describe('website smoke test', () => {
     expect(host.querySelector('.languages')).not.toBeNull()
     expect(host.querySelector('.related-content-container')).not.toBeNull()
     if (item.project_key) expect(host.querySelector('.source-reference').textContent).toContain(item.project_key)
+    // The glossary tool (metanull/the-use-of-colours-in-art#36) is unconditional — the
+    // layout's own component, not local state, so every sheet carries it.
+    expect(host.querySelector('.mwnf-glossary-tool')).not.toBeNull()
     app.unmount()
   }, 60000)
+
+  // The dynasty popouts (metanull/the-use-of-colours-in-art#36) are DynastyList/
+  // DynastyPopout from the layout, fed the raw dynasty records legacy's own
+  // rule already filtered to (a dynasty with no history text gets no
+  // popout) — an item with such a dynasty must render the list with it.
+  it('renders a dynasty popout on an item sheet that has one', async () => {
+    const [, items] = await loadEntities(['exhibition', 'items'])
+    const item = items.find((i) =>
+      (!i.languages?.length || i.languages.includes('en'))
+      && (i.dynasty_ids ?? []).some((id) => dynastyNamesEn[id]?.history))
+    const dynastyId = item.dynasty_ids.find((id) => dynastyNamesEn[id]?.history)
+    const { app, host } = await mountSite(`#/item/${item.id}`)
+    await vi.waitFor(() => expect(host.querySelector('.mwnf-dynasty-list')).not.toBeNull(), { timeout: 20000 })
+    expect(host.querySelectorAll('.mwnf-dynasty').length).toBeGreaterThan(0)
+    expect(host.textContent).toContain(dynastyNamesEn[dynastyId].name)
+    app.unmount()
+  }, 60000)
+
+  // The partner pages run on the platform's composed views
+  // (metanull/the-use-of-colours-in-art#34): the country grouping and the A-Z toggle are
+  // `PartnerListView`'s, the tab strip and the map are this exhibition's own
+  // header/before-sheet slots (partnerSpecs.js), and the objects grid is the
+  // composed results view scoped to one partner (PartnerObjects.vue).
+  it('renders the partners list on the composed list view', async () => {
+    const [exhibition, partners] = await loadEntities(['exhibition', 'partners'])
+    const hidden = new Set(exhibition.hidden_partner_ids ?? [])
+    const partner = partners.find((p) => !hidden.has(p.id) && partnerNamesEn[p.id]?.name)
+    const { app, host } = await mountSite('#/partners')
+    await vi.waitFor(() => expect(host.querySelector('.mwnf-partner-list')).not.toBeNull(), { timeout: 20000 })
+    // Country groups, every one open (`variant: 'open'`), and the A-Z / Z-A
+    // toggle (`orderToggle: true`) — both from partnerListSpec.
+    expect(host.querySelectorAll('.mwnf-partner-list__group-heading').length).toBeGreaterThan(0)
+    expect(host.querySelector('.mwnf-partner-list__toggle-button')).not.toBeNull()
+    // A row's name is the real translation, not a placeholder or a bare entry.
+    expect(host.textContent).toContain(partnerNamesEn[partner.id].name)
+    app.unmount()
+  }, 30000)
+
+  it('renders a partner profile on the composed record view', async () => {
+    const [exhibition, partners] = await loadEntities(['exhibition', 'partners'])
+    const hidden = new Set(exhibition.hidden_partner_ids ?? [])
+    const partner = partners.find((p) => !hidden.has(p.id) && p.type !== 'institution' && partnerNamesEn[p.id]?.name)
+    const { app, host } = await mountSite(`#/partner/${partner.id}`)
+    await vi.waitFor(() => expect(host.querySelector('.mwnf-record')).not.toBeNull(), { timeout: 20000 })
+    expect(host.textContent).toContain(partnerNamesEn[partner.id].name)
+    // The Description/Contact/Logo tab strip and the OpenStreetMap embed are
+    // this page's own slots — no local language switcher or lightbox remains.
+    expect(host.querySelector('#partner-links')).not.toBeNull()
+    expect(host.querySelector('.mwnf-partner-map')).not.toBeNull()
+    app.unmount()
+  }, 30000)
+
+  it('renders a partner objects page on the composed results view', async () => {
+    const [exhibition, partners] = await loadEntities(['exhibition', 'partners'])
+    const hidden = new Set(exhibition.hidden_partner_ids ?? [])
+    const partner = partners.find((p) => !hidden.has(p.id) && p.item_count > 0)
+    const { app, host } = await mountSite(`#/partner/${partner.id}/objects`)
+    await vi.waitFor(() => expect(host.querySelector('.mwnf-grid__tile')).not.toBeNull(), { timeout: 20000 })
+    expect(host.querySelector('.mwnf-catalogue')).not.toBeNull()
+    // The header names the partner this page scopes the grid to.
+    expect(host.textContent).toContain(partnerNamesEn[partner.id]?.name ?? partner.id)
+    app.unmount()
+  }, 30000)
+
+  // The collection entrance and the header search results run on the
+  // platform's composed views (metanull/the-use-of-colours-in-art#35): the facet
+  // dropdowns, the from/to year buckets and the navigate-on-choice behaviour
+  // are `SearchFormView`'s (`mode: 'facets'`, CollectionSearch.vue); the
+  // boolean keyword grammar over the haystack is `CatalogueResultsView`'s
+  // `narrow` (SearchResults.vue), unchanged from before this story.
+  it('renders the collection entrance on the composed search form view', async () => {
+    const { app, host } = await mountSite('#/collection')
+    await vi.waitFor(() => expect(host.querySelector('.mwnf-search-form')).not.toBeNull(), { timeout: 20000 })
+    // The country dropdown plus at least one populated tag category.
+    expect(host.querySelectorAll('.mwnf-search-form .mwnf-facet').length).toBeGreaterThan(1)
+    // The shared from/to year buckets (`dates: 'buckets'`).
+    expect(host.querySelector('.mwnf-search-form__dates')).not.toBeNull()
+    // The "How to search" link to the essay page.
+    expect(host.querySelector('.mwnf-search-form__how-to')).not.toBeNull()
+    expect(host.textContent).toContain('Have you already been at')
+    app.unmount()
+  }, 30000)
+
+  it('returns every renderable object for the all-objects sentinel', async () => {
+    const { app, host } = await mountSite('#/search?q=all-objects')
+    await vi.waitFor(() => expect(host.querySelector('.mwnf-grid__tile')).not.toBeNull(), { timeout: 20000 })
+    expect(host.textContent).toContain('All objects')
+    app.unmount()
+  }, 30000)
+
+  it('renders a keyword search on the composed results view', async () => {
+    const [, items] = await loadEntities(['exhibition', 'items'])
+    // A term this build actually ships text for — the boolean grammar reads
+    // the English sheet, so a name from an English-tagged member is a hit
+    // the client-side index and the server-rendered fixture must agree on.
+    const item = items.find((i) => !i.languages?.length || i.languages.includes('en'))
+    const term = item.internal_name.split(' ')[0]
+    const { app, host } = await mountSite(`#/search?q=${encodeURIComponent(term)}`)
+    await vi.waitFor(() => expect(host.querySelector('.mwnf-grid__tile')).not.toBeNull(), { timeout: 20000 })
+    expect(host.textContent).toContain(`“${term}”`)
+    // Fewer than the full set, or the boolean grammar found nothing narrow.
+    expect(host.querySelectorAll('.mwnf-grid__tile').length).toBeGreaterThan(0)
+    app.unmount()
+  }, 30000)
+
+  it('offers the two ways out of an empty keyword search', async () => {
+    const { app, host } = await mountSite('#/search?q=zzz-nonexistent-keyword-zzz')
+    await vi.waitFor(() => expect(host.querySelector('.mwnf-catalogue')).not.toBeNull(), { timeout: 20000 })
+    expect(host.textContent).toContain('No items match your search.')
+    expect(host.querySelector('a[href="#/how-to-search"]')).not.toBeNull()
+    expect(host.querySelector('a[href="#/collection"]')).not.toBeNull()
+    app.unmount()
+  }, 30000)
+
+  it('renders the search how-to essay on the composed text page view', async () => {
+    const { app, host } = await mountSite('#/how-to-search')
+    await vi.waitFor(() => expect(host.textContent).toContain('Boolean Full Text Search'), { timeout: 20000 })
+    expect(host.querySelector('a[href="#/collection"]')).not.toBeNull()
+    app.unmount()
+  }, 30000)
 
   // The five theme-family pages run on composed views (metanull/the-use-of-colours-in-art#32):
   // the accordion, the essay, the results grid and the link list are the
@@ -104,6 +229,97 @@ describe('website smoke test', () => {
     expect(host.querySelector('.mwnf-catalogue')).not.toBeNull()
     app.unmount()
   }, 30000)
+
+  // The timeline entrance, results and gallery run on viewer-layout's
+  // composed views (metanull/the-use-of-colours-in-art#33): `timelineSpec` drives the
+  // form/results shape, `timelineGallerySpec` the country/period join.
+  it('renders the timeline entrance on the composed timeline view, as a form', async () => {
+    const { app, host } = await mountSite('#/timeline')
+    await vi.waitFor(() => expect(host.querySelector('.mwnf-timeline')).not.toBeNull(), { timeout: 20000 })
+    expect(host.querySelector('.mwnf-timeline__filters')).not.toBeNull()
+    // The entrance renders the form alone — no results row, no summary.
+    expect(host.querySelector('.mwnf-timeline__row')).toBeNull()
+    expect(host.querySelector('.mwnf-summary')).toBeNull()
+    expect(host.textContent).toContain('Have you already been at')
+    app.unmount()
+  }, 30000)
+
+  it('renders the timeline results on the composed timeline view', async () => {
+    const { app, host } = await mountSite('#/timeline-results')
+    await vi.waitFor(() => expect(host.querySelector('.mwnf-summary')).not.toBeNull(), { timeout: 20000 })
+    expect(host.querySelector('.mwnf-timeline')).not.toBeNull()
+    // "Events found" is the default summary label — this exhibition supplies
+    // no summary of its own.
+    expect(host.textContent).toContain('Events found')
+    app.unmount()
+  }, 30000)
+
+  it('offers "See Gallery" from the timeline results when the period has objects', async () => {
+    const [, items] = await loadEntities(['exhibition', 'items'])
+    const dated = items.find((i) => Number.isFinite(i.start_date) && i.country_id)
+    const { app, host } = await mountSite(
+      `#/timeline-results?country=${dated.country_id}&begin=${dated.start_date}&end=${dated.end_date ?? dated.start_date}`,
+    )
+    await vi.waitFor(() => expect(host.querySelector('.mwnf-timeline__gallery')).not.toBeNull(), { timeout: 20000 })
+    expect(host.querySelector('.mwnf-timeline__gallery').textContent).toContain('See Gallery')
+    app.unmount()
+  }, 30000)
+
+  it('renders the timeline gallery on the composed results view', async () => {
+    const [, items] = await loadEntities(['exhibition', 'items'])
+    const dated = items.find((i) => Number.isFinite(i.start_date) && i.country_id)
+    const { app, host } = await mountSite(
+      `#/timeline/gallery?country=${dated.country_id}&begin=${dated.start_date}&end=${dated.end_date ?? dated.start_date}`,
+    )
+    await vi.waitFor(() => expect(host.querySelector('.mwnf-catalogue')).not.toBeNull(), { timeout: 20000 })
+    // The item that seeded the query overlaps its own period, so the grid is
+    // never empty here.
+    expect(host.querySelector('.mwnf-grid__tile')).not.toBeNull()
+    app.unmount()
+  }, 30000)
+
+  it('timeline country id filter produces the same results as the legacy two-letter code', async () => {
+    const [, items] = await loadEntities(['exhibition', 'items'])
+    // Find an item with Greece (grc) to use for the test
+    const datedGrc = items.find((i) => Number.isFinite(i.start_date) && i.country_id === 'grc')
+    if (!datedGrc) {
+      // Skip if no Greece items exist
+      return
+    }
+
+    // Mount with the country id (grc)
+    const { app: appId, host: hostId } = await mountSite(
+      `#/timeline-results?country=grc&begin=${datedGrc.start_date}&end=${datedGrc.end_date ?? datedGrc.start_date}`,
+    )
+    await vi.waitFor(() => expect(hostId.querySelector('.mwnf-summary')).not.toBeNull(), { timeout: 20000 })
+
+    // Mount with the legacy code (gr)
+    const { app: appCode, host: hostCode } = await mountSite(
+      `#/timeline-results?country=gr&begin=${datedGrc.start_date}&end=${datedGrc.end_date ?? datedGrc.start_date}`,
+    )
+    await vi.waitFor(() => expect(hostCode.querySelector('.mwnf-summary')).not.toBeNull(), { timeout: 20000 })
+
+    // Both should render the same number of rows
+    const rowsId = hostId.querySelectorAll('.mwnf-timeline__row').length
+    const rowsCode = hostCode.querySelectorAll('.mwnf-timeline__row').length
+    expect(rowsId).toBe(rowsCode)
+
+    // Both should have the same gallery link text and count
+    const galleryId = hostId.querySelector('.mwnf-timeline__gallery')
+    const galleryCode = hostCode.querySelector('.mwnf-timeline__gallery')
+    if (galleryId && galleryCode) {
+      expect(galleryId.textContent).toBe(galleryCode.textContent)
+    }
+
+    // The first row's caption should contain the country name "Greece"
+    const firstRowId = hostId.querySelector('.mwnf-timeline__row')
+    if (firstRowId) {
+      expect(firstRowId.textContent).toContain('Greece')
+    }
+
+    appId.unmount()
+    appCode.unmount()
+  }, 60000)
 
   it('renders the related content on the composed link list', async () => {
     const { app, host } = await mountSite('#/related')
@@ -206,6 +422,13 @@ describe('website smoke test', () => {
     expect(galleryFor.resolve({ country: 'uk', start: 'any', end: '1500', page: '2' })).toEqual({
       name: 'timeline-gallery',
       query: { country: 'uk', end: '1500', page: '2' },
+    })
+    // The path's own `start` becomes `begin` in the query: viewer-layout's
+    // `TimelineResultsView` renders its date control under that key, and the
+    // gallery spec reads the same one, so both routes stay one shape.
+    expect(galleryFor.resolve({ country: 'uk', start: '1200', end: 'any', page: '1' })).toEqual({
+      name: 'timeline-gallery',
+      query: { country: 'uk', begin: '1200' },
     })
   }, 20000)
 

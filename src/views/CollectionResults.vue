@@ -2,12 +2,11 @@
 import { computed } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { useI18n, yearBuckets } from '@metanull/viewer-core'
-import { FacetSelect, FilterPanel, Pagination } from '@metanull/viewer-layout/content'
+import { BackLink, FacetSelect, FilterPanel, Pagination } from '@metanull/viewer-layout/content'
 import { CatalogueResultsView } from '@metanull/viewer-layout/views'
 import { labelOf, timelines } from '../composables/useExhibitionData.js'
 import { FACET_CATEGORIES, collectionResults, countryIdForCode, useFacetLabels } from '../composables/useCollection.js'
 import { hasTimeline } from '../composables/useTimeline.js'
-import BackLink from '../components/BackLink.vue'
 
 // Results plus "filter further by", on the platform's composed results page:
 // the filters in the URL, the dependent options, the date rule, the tiles and
@@ -88,8 +87,8 @@ function showTimelineLink(filters) {
           @update:model-value="apply({ [category]: $event })"
         />
         <div class="date-wrapper">
-          <FacetSelect :model-value="filters.start" :options="yearBuckets(matching, t)" :placeholder="$t('catalogue.facet.startDate')" @update:model-value="apply({ start: $event })" />
-          <FacetSelect :model-value="filters.end" :options="yearBuckets(matching, t)" :placeholder="$t('catalogue.facet.endDate')" @update:model-value="apply({ end: $event })" />
+          <FacetSelect :model-value="filters.from" :options="yearBuckets(matching, t)" :placeholder="$t('catalogue.facet.startDate')" @update:model-value="apply({ from: $event })" />
+          <FacetSelect :model-value="filters.to" :options="yearBuckets(matching, t)" :placeholder="$t('catalogue.facet.endDate')" @update:model-value="apply({ to: $event })" />
         </div>
       </FilterPanel>
 
@@ -97,7 +96,7 @@ function showTimelineLink(filters) {
         <div class="options-label">{{ $t('catalogue.results.timelineForSearch') }}</div>
         <p>
           ➤
-          <RouterLink :to="{ name: 'timeline-results', query: { c: filters.country, start: filters.start, end: filters.end } }">
+          <RouterLink :to="{ name: 'timeline-results', query: { country: countryIdForCode(filters.country), begin: filters.from, end: filters.to } }">
             {{ $t('exhibition.section.timeline') }} | {{ labelOf('countries', countryIdForCode(filters.country)) }}
           </RouterLink>
         </p>
@@ -118,4 +117,3 @@ function showTimelineLink(filters) {
 .timeline-link-box { margin-top: 16px; background: var(--rule-grey); padding: 14px; }
 .timeline-link-box a { color: var(--link-blue); }
 </style>
-
