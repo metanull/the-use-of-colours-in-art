@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { eraLabel, roundOutward, yearBucketsFromRange } from '@metanull/viewer-core'
 import {
-  exhibition, timelines, timelineEvents, countries, countryById, countryLabel,
+  exhibition, timelines, timelineEvents, countries, countryById, labelOf,
   tr, defaultLang,
 } from './useExhibitionData.js'
 
@@ -19,15 +19,12 @@ export { eraLabel, roundOutward }
 // switches its endpoint on it (`timelineURL = "/thg/timeline?hash="` in the
 // false branch).
 //
-// This exhibition reports `has_timeline: true` / `has_country_timeline: false`,
-// so its Timeline pages show its OWN chronology — the `thg_local` row — rather
-// than the worldwide merge.
-//
-// The worldwide merge is still in the package regardless, because every DXA
-// site is shipped it whatever its flags say. The flags therefore gate
-// navigation and selection, never the presence of data: an exhibition with
-// both flags false still has `timelines.json` full of events it simply never
-// shows. Reading the flags as "has timeline data" is the trap.
+// Both flags are false for this exhibition, and that does NOT mean "no timeline
+// data". `timelines.json` still ships the worldwide merge in full — every DXA
+// site gets the worldwide merge whatever its flags say — with no `thg_local`
+// row at all. The flags gate NAVIGATION, not data. Colours proved that in one
+// direction (`has_timeline` true, with a `thg_local` chronology) and this
+// exhibition proves it in the other.
 //
 // The `thg_local` row has no `country_id`, which is exactly why it must be
 // separated by `source` rather than left to the country filter: on "All
@@ -45,14 +42,17 @@ export const usesLocalTimeline = computed(
  * Whether this site offers a Timeline at all — the one flag every piece of
  * timeline chrome is gated on.
  *
- * It gates more than the nav entry: legacy also withholds the "Timeline for
- * this item" popout on the item sheet and "Timeline for this Search" on the
- * collection results, which is why this is exported and read in three places
- * rather than being a local check in the navigation.
+ * Legacy hides more than the nav entry when both chronology flags are false,
+ * which is only visible on a site that has them both false. Checked against the
+ * live instance: the word "timeline" appears nowhere on its item sheet (no
+ * "Timeline for this item" popout) or on its collection results ("Timeline for
+ * this Search"), and the nav runs ABOUT · THEMES · COLLECTION · PARTNERS ·
+ * RELATED CONTENT · CREDITS · MY COLLECTION with no TIMELINE between PARTNERS
+ * and RELATED CONTENT.
  *
- * The ROUTES stay reachable either way, because legacy's do — typing /timeline
- * on an instance with no timeline still renders the page and its `txtTimeline`
- * introduction. Only the links into it are withheld.
+ * The ROUTES stay reachable, because legacy's do: typing /timeline on the live
+ * instance still renders the page and its `txtTimeline` introduction. Only the
+ * links into it are withheld.
  */
 export const hasTimeline = computed(
   () => Boolean(exhibition.has_timeline || exhibition.has_country_timeline)
@@ -69,9 +69,9 @@ const eventPool = computed(() => {
 })
 
 // The global country timeline, served by legacy `/v2/events`. It is
-// country-scoped and project-independent — which is why a live instance
-// answers `/events/countries` with the worldwide list even though its own
-// `hasCountryBasedTimeline` flag is false.
+// country-scoped and project-independent — which is why the live carpets
+// instance answers `/events/countries` with the worldwide list even though its
+// own `hasCountryBasedTimeline` flag is false.
 //
 // It is also a MERGE of two chronologies rather than one table. Legacy's
 // `App\MWNF\DAO\v2\Events` unions `mwnf3.hcr` (the Discover Islamic Art country
@@ -110,7 +110,7 @@ const LEGACY_TO_ISO = { uk: 'GB', pa: 'PS' }
 
 // A lookup, not a parse. The fallback exists only for the regressed-package
 // case described above, and it must agree with GLOBAL_TIMELINE_LIKE_PATTERNS in
-// `scripts/exporters/the-use-of-colours-in-art/src/exporters/timeline-exporter.ts`: the country
+// `scripts/exporters/carpets/src/exporters/timeline-exporter.ts`: the country
 // sits after the literal `country` segment in BOTH keyspaces
 // (`mwnf3:hcr:country:<cc>` and
 // `mwnf3_sharing_history:sh_hcr:country:<cc>:exhibition:2`), and it is the last
@@ -125,7 +125,7 @@ function legacyCodeOf(timeline) {
 
 function nameFor(timeline) {
   const fromPackage = countries.value.some(c => c.id === timeline.country_id)
-    ? countryLabel(timeline.country_id)
+    ? labelOf('countries', timeline.country_id)
     : null
   if (fromPackage) return fromPackage
   const legacy = legacyCodeOf(timeline)
@@ -159,7 +159,7 @@ export const timelineCountries = computed(() => {
 
 /** Display name for an event's country. */
 export function timelineCountryName(countryId) {
-  if (countries.value.some(c => c.id === countryId)) return countryLabel(countryId)
+  if (countries.value.some(c => c.id === countryId)) return labelOf('countries', countryId)
   const timeline = timelines.value.find(t => t.country_id === countryId)
   return timeline ? nameFor(timeline) : countryId
 }
@@ -219,3 +219,4 @@ export function findEvents({ countryCode, start, end }) {
     }))
     .sort((a, b) => (a.year_from - b.year_from) || (a.display_order ?? 0) - (b.display_order ?? 0))
 }
+

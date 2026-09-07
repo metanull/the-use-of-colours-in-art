@@ -9,7 +9,7 @@ import { useI18n, useSection, useSiteConfig } from '@metanull/viewer-core'
 import { PageShell } from '@metanull/viewer-layout'
 import { useRouter } from 'vue-router'
 import {
-  exhibition, chromeImage, itemById, itemLabel, partnerLabel, countryLabel, tr, defaultLang,
+  exhibition, chromeImage, itemById, labelOf, tr, defaultLang,
   exhibitionTitle, exhibitionSubtitle, exhibitionHeadline, bannerCaption,
 } from './composables/useExhibitionData.js'
 import { hasTimeline } from './composables/useTimeline.js'
@@ -89,8 +89,9 @@ function logoCaption(logo) {
 
 // Legacy renders category 0 — "Header" — beside the MWNF mark, under the
 // `header_logo_section_1` heading, and leaves categories 1–4 to the footer
-// strip. Which categories an exhibition populates is the data's business, not
-// this shell's, so both blocks are rendered and either may come out empty.
+// strip. This exhibition has one logo and it is category 1, the UNAOC mark
+// under "Under the patronage of", so the header block stays empty here too;
+// the code is kept because the split is the data's, not this exhibition's.
 const headerLogos = computed(() =>
   (exhibition.value?.logos ?? [])
     .filter((logo) => Number(logo.category_id) === 0 && logo.visible !== false)
@@ -144,10 +145,10 @@ const banner = computed(() => {
   if (!item) return ''
   const sheet = tr('items', item.id, defaultLang)
   return {
-    name: itemLabel(item),
-    partner: partnerLabel(item.partner_id),
+    name: labelOf('items', item.id),
+    partner: labelOf('partners', item.partner_id),
     location: sheet.location ?? '',
-    country: countryLabel(item.country_id),
+    country: labelOf('countries', item.country_id),
   }
 })
 
@@ -224,3 +225,4 @@ const bottomLinks = computed(() => [
   font-size: 18px;
 }
 </style>
+

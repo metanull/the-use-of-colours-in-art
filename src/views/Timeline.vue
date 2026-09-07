@@ -6,15 +6,17 @@ import { I18nText, useI18n } from '@metanull/viewer-core'
 
 // Timeline entry form.
 //
-// Unlike a gallery, an exhibition can have a chronology of its own, and this
-// one does — so this form drives the exhibition's own narrative rather than
-// the worldwide country merge, and the country select is hidden. Which of the
-// two is in play is `usesLocalTimeline`, never a literal here.
+// Unlike a gallery, an exhibition can have a chronology of its own. This one
+// does not, so this form drives the worldwide country merge and the country
+// select renders. Which of the two is in play is `usesLocalTimeline`, never a
+// literal here — and note it turns on the presence of a `thg_local` row, not
+// on `has_country_timeline`.
 //
-// The page stays reachable by URL even on an exhibition that offers no
-// timeline at all, because legacy keeps it reachable; only the links into it
-// are withheld. So this component must render sensibly with an empty event
-// pool.
+// Both chronology flags being false also means the nav offers no Timeline and
+// nothing on the site links here (see `hasTimeline`), yet the page stays
+// reachable by URL because legacy keeps it reachable — typing /timeline on the
+// live instance still renders this form and its introduction. So this
+// component must render sensibly for a visitor who arrives with no link.
 //
 // The introduction is a shared entry: the only thing that made the old
 // `txtTimeline` this exhibition's own was an absolute URL to its Themes page —
@@ -39,7 +41,7 @@ function goToResults() {
   <div id="timeline-page">
     <div id="timeline-form">
       <select class="legacy-select" v-model="country" v-if="!usesLocalTimeline">
-        <option value="" disabled>{{ $t('exhibition.timeline.selectCountry') }}</option>
+        <option value="" disabled>{{ $t('timeline.form.selectCountry') }}</option>
         <option v-for="c in timelineCountries" :key="c[0]" :value="c[0]">{{ c[1] }}</option>
       </select>
 
@@ -76,3 +78,4 @@ function goToResults() {
   #timeline-form, #timeline-description { width: 100%; max-width: none; padding: 30px; }
 }
 </style>
+
