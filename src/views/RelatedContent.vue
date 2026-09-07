@@ -6,7 +6,7 @@ import {
 import { useI18n } from '@metanull/viewer-core'
 import BackLink from '../components/BackLink.vue'
 
-const { locale } = useI18n()
+const { t, locale } = useI18n()
 
 // Legacy's RelatedContent: the exhibition's reading list, grouped by category
 // and ordered inside each group.
@@ -17,13 +17,15 @@ const { locale } = useI18n()
 // The names below are that table's English rows, verbatim from the live API
 // (`exhibitionRelatedContents[*].categoryName`) — the same class of ported
 // legacy constant as the timeline's year-bucket algorithm, and recorded as a
-// package gap in README.md rather than pretended away.
-const CATEGORY_NAMES = {
-  1: 'Further Reading',
-  2: 'Related MWNF Content',
-  3: 'Related Partner Content',
-  4: 'Other Related Content',
-}
+// package gap in README.md rather than pretended away. They live under this
+// site's own namespace for now and move to the shared dictionary once every
+// exhibition site carries them.
+const CATEGORY_NAMES = computed(() => ({
+  1: t('colours.relatedCategory.furtherReading'),
+  2: t('colours.relatedCategory.mwnfContent'),
+  3: t('colours.relatedCategory.partnerContent'),
+  4: t('colours.relatedCategory.otherContent'),
+}))
 
 // Legacy's own display order for the four groups, which is the order its API
 // happened to answer in — not ascending id.
@@ -51,7 +53,7 @@ const groups = computed(() => {
   ]
   return ids.map(id => ({
     id,
-    name: CATEGORY_NAMES[id] ?? `Category ${id}`,
+    name: CATEGORY_NAMES.value[id] ?? `${t('colours.relatedCategory.unknown')} ${id}`,
     entries: [...byCategory.get(id)].sort(
       (a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)
     ),
@@ -70,8 +72,7 @@ const groups = computed(() => {
            exhibition's `extra.further_readings` instead. An empty page would
            read as a rendering fault, so say it plainly if it ever happens. -->
       <p class="related-content-empty" v-if="!groups.length">
-        The reading list for this exhibition is not yet available in the data
-        package.
+        {{ $t('colours.related.notAvailable') }}
       </p>
 
       <div class="related-content-category" v-for="group in groups" :key="group.id">

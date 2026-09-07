@@ -92,8 +92,8 @@ function onSubThemeChange(event) {
 
     <div id="theme-gallery-header">
       <span>
-        Theme {{ roman }} | <span class="bold">{{ title }}</span>
-        <span v-if="selectedSub" class="bold"> ▪ {{ selectedSub.title }}</span> | Gallery
+        {{ $t('colours.theme.romanLabel') }} {{ roman }} | <span class="bold">{{ title }}</span>
+        <span v-if="selectedSub" class="bold"> ▪ {{ selectedSub.title }}</span> | {{ $t('colours.theme.galleryLabel') }}
       </span>
     </div>
 
@@ -114,7 +114,7 @@ function onSubThemeChange(event) {
         </select>
         <div class="reset-container" v-if="subIndex">
           <button class="legacy-button" @click="router.push(`/theme-gallery/${route.params.id}`)">
-            See all Items in this Theme
+            {{ $t('colours.theme.seeAllInTheme') }}
           </button>
         </div>
       </div>
