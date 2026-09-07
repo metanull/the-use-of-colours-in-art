@@ -5,6 +5,7 @@ import { catalogues as sharedTexts } from '@metanull/viewer-i18n/exhibition'
 import ownTexts from '../locales/en.json'
 import config from '../src/dataset.config.js'
 import partnerNamesEn from '@metanull/the-use-of-colours-in-art-data/translations/partners.en.json'
+import dynastyNamesEn from '@metanull/the-use-of-colours-in-art-data/translations/dynasties.en.json'
 
 // The same two layers main.js assembles, in the same order: the shared bundle
 // first, this exhibition's own file last. Mounting without them would prove
@@ -63,6 +64,26 @@ describe('website smoke test', () => {
     expect(host.querySelector('.languages')).not.toBeNull()
     expect(host.querySelector('.related-content-container')).not.toBeNull()
     if (item.project_key) expect(host.querySelector('.source-reference').textContent).toContain(item.project_key)
+    // The glossary tool (metanull/water-in-islam#36) is unconditional — the
+    // layout's own component, not local state, so every sheet carries it.
+    expect(host.querySelector('.mwnf-glossary-tool')).not.toBeNull()
+    app.unmount()
+  }, 60000)
+
+  // The dynasty popouts (metanull/water-in-islam#36) are DynastyList/
+  // DynastyPopout from the layout, fed the raw dynasty records legacy's own
+  // rule already filtered to (a dynasty with no history text gets no
+  // popout) — an item with such a dynasty must render the list with it.
+  it('renders a dynasty popout on an item sheet that has one', async () => {
+    const [, items] = await loadEntities(['exhibition', 'items'])
+    const item = items.find((i) =>
+      (!i.languages?.length || i.languages.includes('en'))
+      && (i.dynasty_ids ?? []).some((id) => dynastyNamesEn[id]?.history))
+    const dynastyId = item.dynasty_ids.find((id) => dynastyNamesEn[id]?.history)
+    const { app, host } = await mountSite(`#/item/${item.id}`)
+    await vi.waitFor(() => expect(host.querySelector('.mwnf-dynasty-list')).not.toBeNull(), { timeout: 20000 })
+    expect(host.querySelectorAll('.mwnf-dynasty').length).toBeGreaterThan(0)
+    expect(host.textContent).toContain(dynastyNamesEn[dynastyId].name)
     app.unmount()
   }, 60000)
 
@@ -256,6 +277,49 @@ describe('website smoke test', () => {
     expect(host.querySelector('.mwnf-grid__tile')).not.toBeNull()
     app.unmount()
   }, 30000)
+
+  it('timeline country id filter produces the same results as the legacy two-letter code', async () => {
+    const [, items] = await loadEntities(['exhibition', 'items'])
+    // Find an item with Greece (grc) to use for the test
+    const datedGrc = items.find((i) => Number.isFinite(i.start_date) && i.country_id === 'grc')
+    if (!datedGrc) {
+      // Skip if no Greece items exist
+      return
+    }
+
+    // Mount with the country id (grc)
+    const { app: appId, host: hostId } = await mountSite(
+      `#/timeline-results?country=grc&begin=${datedGrc.start_date}&end=${datedGrc.end_date ?? datedGrc.start_date}`,
+    )
+    await vi.waitFor(() => expect(hostId.querySelector('.mwnf-summary')).not.toBeNull(), { timeout: 20000 })
+
+    // Mount with the legacy code (gr)
+    const { app: appCode, host: hostCode } = await mountSite(
+      `#/timeline-results?country=gr&begin=${datedGrc.start_date}&end=${datedGrc.end_date ?? datedGrc.start_date}`,
+    )
+    await vi.waitFor(() => expect(hostCode.querySelector('.mwnf-summary')).not.toBeNull(), { timeout: 20000 })
+
+    // Both should render the same number of rows
+    const rowsId = hostId.querySelectorAll('.mwnf-timeline__row').length
+    const rowsCode = hostCode.querySelectorAll('.mwnf-timeline__row').length
+    expect(rowsId).toBe(rowsCode)
+
+    // Both should have the same gallery link text and count
+    const galleryId = hostId.querySelector('.mwnf-timeline__gallery')
+    const galleryCode = hostCode.querySelector('.mwnf-timeline__gallery')
+    if (galleryId && galleryCode) {
+      expect(galleryId.textContent).toBe(galleryCode.textContent)
+    }
+
+    // The first row's caption should contain the country name "Greece"
+    const firstRowId = hostId.querySelector('.mwnf-timeline__row')
+    if (firstRowId) {
+      expect(firstRowId.textContent).toContain('Greece')
+    }
+
+    appId.unmount()
+    appCode.unmount()
+  }, 60000)
 
   it('renders the related content on the composed link list', async () => {
     const { app, host } = await mountSite('#/related')
