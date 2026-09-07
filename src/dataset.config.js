@@ -9,17 +9,11 @@ import { itemFromUidPath, partnerFromKey } from './composables/useExhibitionData
 
 const { manifest } = useDataPackage()
 
-// An exhibition language is a separate SITE, not a switch: legacy deployed
-// `/{slug}/{lang}` as independent instances, and decision Q2 keeps that shape.
-// So the package declares `site.languages` from `exhibition_i18n.enabled` —
-// what legacy actually published — and never from the languages a record
-// happens to be translated into. This exhibition is where the two diverge: it
-// has German text throughout and no German instance legacy ever put live, so
-// German is translated and not offered. See the exporter's
-// VALIDATION-2026-08-28, "German: enabled is not the same as translated".
-//
-// An item sheet may still offer more — whatever languages the record itself
-// carries — from its own switcher, without touching the site language.
+// The languages this exhibition publishes (`exhibition_i18n.enabled`, declared
+// by the package as `site.languages`), kept where the item translations
+// actually carry them. An item sheet may offer more — whatever languages the
+// record itself carries — from its own switcher, without touching the site
+// language.
 const languages = offeredLanguages()
 
 // Every page renders the chrome — the header logos, the banner and its
@@ -115,6 +109,8 @@ export default {
       path: '/item/:id',
       name: 'item',
       component: () => import('./views/ItemSheet.vue'),
+      // The composed RecordView takes the record id as a prop, not a route read.
+      props: (route) => ({ id: route.params.id }),
       meta: meta('database', 'languages', 'dynasties', 'glossary', 'timelines', 'timeline_events'),
     },
     { path: '/search', name: 'search-results', component: () => import('./views/SearchResults.vue'), meta: meta('database') },
