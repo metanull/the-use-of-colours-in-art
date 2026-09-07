@@ -2,11 +2,10 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { dateRange, eraLabel, sortChronological, useI18n, useListQuery, usePagination } from '@metanull/viewer-core'
-import { Pagination, RecordGrid } from '@metanull/viewer-layout/content'
+import { BackLink, Pagination, RecordGrid } from '@metanull/viewer-layout/content'
 import { items, labelOf } from '../composables/useExhibitionData.js'
 import { PAGE_SIZE, useGridRecords } from '../composables/useCollection.js'
 import { countryIdForCode } from '../composables/useTimeline.js'
-import BackLink from '../components/BackLink.vue'
 
 // The member items whose dates overlap the timeline search's country and
 // period. Legacy asked `/items` for this; here it is the same join, done

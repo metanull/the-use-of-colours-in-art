@@ -7,8 +7,7 @@ import {
   usesLocalTimeline,
 } from '../composables/useTimeline.js'
 import { useI18n, useListQuery, usePagination } from '@metanull/viewer-core'
-import { Pagination } from '@metanull/viewer-layout/content'
-import BackLink from '../components/BackLink.vue'
+import { BackLink, Pagination } from '@metanull/viewer-layout/content'
 
 // Timeline results, with the "See Gallery" cross-link legacy showed whenever
 // the chosen country/period actually contains member items — the timeline
