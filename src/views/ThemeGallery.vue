@@ -92,8 +92,8 @@ function onSubThemeChange(event) {
 
     <div id="theme-gallery-header">
       <span>
-        {{ $t('colours.theme.romanLabel') }} {{ roman }} | <span class="bold">{{ title }}</span>
-        <span v-if="selectedSub" class="bold"> ▪ {{ selectedSub.title }}</span> | {{ $t('colours.theme.galleryLabel') }}
+        {{ $t('exhibition.theme.romanLabel') }} {{ roman }} | <span class="bold">{{ title }}</span>
+        <span v-if="selectedSub" class="bold"> ▪ {{ selectedSub.title }}</span> | {{ $t('exhibition.theme.galleryLabel') }}
       </span>
     </div>
 
@@ -114,7 +114,7 @@ function onSubThemeChange(event) {
         </select>
         <div class="reset-container" v-if="subIndex">
           <button class="legacy-button" @click="router.push(`/theme-gallery/${route.params.id}`)">
-            {{ $t('colours.theme.seeAllInTheme') }}
+            {{ $t('exhibition.theme.seeAllInTheme') }}
           </button>
         </div>
       </div>
@@ -149,3 +149,4 @@ function onSubThemeChange(event) {
   .subtheme-filter { width: 100%; }
 }
 </style>
+

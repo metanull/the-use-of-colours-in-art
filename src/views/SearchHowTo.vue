@@ -10,7 +10,7 @@ import BackLink from '../components/BackLink.vue'
 <template>
   <div class="editorial">
     <BackLink />
-    <I18nText class="prose" dir="auto" keypath="exhibition.search.howTo" />
+    <I18nText class="prose" dir="auto" keypath="catalogue.search.howToEssay" />
   </div>
 </template>
 
@@ -18,3 +18,4 @@ import BackLink from '../components/BackLink.vue'
 .editorial { background: #fff; width: 100%; min-height: 400px; padding-bottom: 40px; }
 .prose { padding: 10px 50px 20px; max-width: 900px; line-height: 1.55; }
 </style>
+

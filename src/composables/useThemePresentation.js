@@ -1,5 +1,5 @@
 import {
-  itemById, itemLabel, partnerLabel, countryLabel, tr, defaultLang,
+  itemById, labelOf, tr, defaultLang,
   themePictures,
 } from './useExhibitionData.js'
 
@@ -10,8 +10,8 @@ import {
 // label a theme page shows (name, holding museum, location, country) is
 // therefore read off the parent record, which is also what "see the full
 // record" links to. `parent_in_package` says whether that parent is resolvable
-// at all — a curated picture whose parent was not exported must still render
-// its own image rather than disappear.
+// at all — a curated picture whose parent was not exported must still render its
+// own image rather than disappear.
 
 /** The parent record of a picture selection, or null when it is not a member. */
 export function pictureParent(picture) {
@@ -24,9 +24,9 @@ export function itemDetailString(item) {
   if (!item) return ''
   const sheet = tr('items', item.id, defaultLang)
   return [
-    sheet.holder || partnerLabel(item.partner_id),
+    sheet.holder || labelOf('partners', item.partner_id),
     sheet.location,
-    countryLabel(item.country_id),
+    labelOf('countries', item.country_id),
   ].filter(Boolean).join(', ')
 }
 
@@ -34,7 +34,7 @@ export function itemDetailString(item) {
 export function pictureCaption(picture) {
   const parent = pictureParent(picture)
   if (!parent) return ''
-  return [itemLabel(parent), itemDetailString(parent)].filter(Boolean).join(', ')
+  return [labelOf('items', parent.id), itemDetailString(parent)].filter(Boolean).join(', ')
 }
 
 /** The cover picture of a theme, falling back to its first selection. */
@@ -53,3 +53,4 @@ export function truncate(chars, text) {
   if (text.length <= chars) return text
   return `${text.slice(0, text.lastIndexOf(' ', chars))}...`
 }
+
