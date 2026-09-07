@@ -45,7 +45,7 @@ const city = computed(() => (partner.value ? tr('partners', partner.value.id, de
       <p id="partner-name">{{ partnerLabel(partner.id) }}</p>
       <p id="partner-location">{{ [city, countryLabel(partner.country_id)].filter(Boolean).join(', ') }}</p>
       <p id="partner-count">
-        {{ pageInfo.total }} {{ isInstitutionView ? 'monument(s) in this Exhibition' : $t('exhibition.partner.objectsInExhibition') }}
+        {{ pageInfo.total }} {{ isInstitutionView ? $t('colours.partner.monumentsInExhibition') : $t('exhibition.partner.objectsInExhibition') }}
       </p>
     </div>
 
@@ -55,13 +55,13 @@ const city = computed(() => (partner.value ? tr('partners', partner.value.id, de
       <RecordGrid :records="rows" :action-label="$t('exhibition.action.seeDatabaseEntry')">
         <template #empty>
           <p class="no-results">
-            This {{ isInstitutionView ? 'institution' : 'partner' }} holds nothing in this Exhibition.
+            {{ isInstitutionView ? $t('colours.partnerObjects.emptyInstitution') : $t('colours.partnerObjects.emptyPartner') }}
           </p>
         </template>
       </RecordGrid>
       <div id="profile-link-container">
         <RouterLink id="profile-link" :to="partnerRoute(partner)">
-          ➤ {{ isInstitutionView ? 'Institution' : 'Partner' }} Profile
+          ➤ {{ isInstitutionView ? $t('colours.partnerObjects.institutionProfile') : $t('colours.partnerObjects.partnerProfile') }}
         </RouterLink>
       </div>
     </div>
