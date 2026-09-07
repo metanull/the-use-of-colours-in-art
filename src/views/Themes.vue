@@ -78,4 +78,3 @@ const cards = computed(() =>
   #themes-wrapper::before { background: transparent; }
 }
 </style>
-

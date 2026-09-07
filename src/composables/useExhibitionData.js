@@ -22,7 +22,6 @@ import {
 export const defaultLang = 'en'
 
 export const exhibition = entityRef('exhibition')
-export const themeTree = entityRef('themes')
 export const relatedContent = entityRef('related_content')
 export const tags = entityRef('tags')
 export const countries = entityRef('countries')
@@ -220,4 +219,3 @@ export const siblingSites = computed(() =>
 export function siblingUrl(sibling) {
   return sibling?.legacy_host || null
 }
-
