@@ -224,7 +224,7 @@ describe('website smoke test', () => {
     expect(text).toContain('A MWNF online exhibition.')
     // Nothing rendered as a bare entry name, which is what a missing text
     // looks like — there is no exception to throw for one.
-    expect(text).not.toMatch(/\b(waterInIslam|exhibition|core|layout)\.[a-z]/i)
+    expect(text).not.toMatch(/\b(colours|exhibition|core|layout)\.[a-z]/i)
 
     app.unmount()
   }, 20000)
