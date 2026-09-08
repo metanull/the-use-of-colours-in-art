@@ -1,5 +1,5 @@
 <script setup>
-// The The Use of Colours in Art page chrome: viewer-layout's own `SiteShell`, mounted
+// The site's page chrome: viewer-layout's own `SiteShell`, mounted
 // from `dataset.config.js`'s `navigation`, `logos` and `banner` declarations
 // (its README, "Site shell") instead of a shell that builds the menu, the
 // link lists, the search submit and the logo buckets by hand.
